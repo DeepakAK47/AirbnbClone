@@ -18,7 +18,7 @@ async function main(){
 
 const initDB = async () =>{
     await Listing.deleteMany({});  // It is responsible for deleting the initial data inside the mongo shell
-    await Listing.insertMany(initData.data);
+    await Listing.insertMany(initData.data);  // It is respnsible for saving data in the mongo shell.
     console.log("Your data is saved duccessfully insed the mongo shell");
 }
 initDB();

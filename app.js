@@ -4,9 +4,18 @@ const mongoose = require("mongoose");
 const Listing = require("./models/listings.js");  // Be carefull use single dot if it is outside only one directory.
 const path = require("path");
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
 
 const methodOverride = require("method-override");
 app.use(methodOverride("_method"));
+
+const ejsMate = require('ejs-mate');
+app.engine('ejs', ejsMate);
+
+const expressLayouts = require("express-ejs-layouts");
+app.use(expressLayouts);
+app.set("layout", "layouts/boilerplate"); 
 
 
 // It is the code for starting our server. 
@@ -44,7 +53,7 @@ res.render("listings/index.ejs",{allListings});
 // New Route
 app.get("/listings/new",(req,res)=>{
     res.render("listings/new.ejs"); 
-});
+}); 
 
 // Show Route
 

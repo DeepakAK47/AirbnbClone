@@ -29,6 +29,12 @@
 // Note -> You have to write the command mongosh to enter the mongoshell   !important.
 // If your data is stored inside the folder and you want to access it another folder then use double dots. If you want to use these data inside the in the file which is not in the another folder then then just onlly use singlr dot.
 
-//
+// ChatGPT said:
+// We install the ejs-mate package to enhance EJS (Embedded JavaScript Templates) with support for layouts, partials, and reusable template structure, which default EJS doesn’t handle directly.
+
+// 🔧 Without ejs-mate:
+// EJS can render views, but doesn’t support layouts (like a common header, footer, navbar, etc.) natively.
+
+
 
 

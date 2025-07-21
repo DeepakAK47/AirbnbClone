@@ -1,22 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wanderlust</title>
-</head>
-<body>
-    <h1>All Listings</h1>
+<h1>All Listings</h1>
+<div class="row row-cols-lg-3 row-cols-md-2 g-4 mb-5">
+    <%for(let listing of allListings){ %>
+        <a href="/listings/<%=listing._id%>" class="text-decoration-none text-dark">
+    <div >
+  <img src="<%=listing.image.url%>" style="height : 250px; width : 100%; object-fit : cover; " class="listing-img img-fluid-rounded rounded" alt="listing image">
+    <p class="mt-2 mb-0">
+        <b><%=listing.title%></b><br/>
+        &#8377; <%=listing.price.toLocaleString("en-IN")%>/ night
+    </p>
+  </div>
+</a>
+<%}%>
+</div>
 
-    <!-- here get is used to get the data form and the action will work on the listing/new -->
-     
-    <form method="GET" action="listings/new">
-        <button>Create new listing</button>
-    </form>
-    <ul>
-       <% for(let listings of allListings){ %>
-        <li><a href="/listings/<%=listings._id%>"><%=listings.title%></a></li>
-        <%}%>
-    </ul>
-</body>
-</html>
+
