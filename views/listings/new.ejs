@@ -3,46 +3,52 @@
 
       <div class="col-8 mx-auto">
         <h1 class="mt-3 mb-5">Create new Listing</h1>
-  <form method="POST" action="/listings">
+  <form method="POST" action="/listings" class="needs-validation" novalidate>
 
-    <div class="d-flex align-items-center ">
+    <div class="">
       <lable for="title" class="form-label me-2" style="width:120px">Title </lable>
-    <input name="listing[title]" placeholder="Enter title" type="text" class="form-control"/>
+    <input name="listing[title]" placeholder="Enter title" type="text" class="form-control" required/>
+      <div class="valid-feedback">Title looks good</div>
     </div>
     <br/>
 
-    <div class="d-flex align-items-center">
+    <div class="">
       <label for="description" class="form-label me-2" style="width:120px">Description</label>
-    <textarea name="listing[description]" placeholder="Enter description" type="text" class="form-control"></textarea>
+    <textarea name="listing[description]" placeholder="Enter description" type="text" class="form-control" required></textarea>
+    <div class="invalid-feedback">Enter sort description</div>
     </div>
 
     <br/>
 
-    <div class="d-flex align-items-center">
+    <div class="">
       <label for="image" class="form-label me-2" style="width:120px">Image URL</label>
-<input name="listing[image]" placeholder="Enter URL of image" type="text" class="form-control"/>
+<input name="listing[image]" placeholder="Enter URL of image" type="text" class="form-control" required/>
+<div class="invalid-feedback">Enter valid URL</div>
 </div>
 
 <br/>
 
-<div class="d-flex">
-<div class="d-flex align-items-center me-5">
+<div class="">
+<div class="r me-5">
   <label for="price" class="form-label me-5" >Price</label>
-<input name="listing[price]" placeholder="Enter the price" class="form-control"/>
+<input name="listing[price]" placeholder="Enter the price" class="form-control" required/>
+<div class="invalid-feedback">Enter valid price</div>
 </div>
 
 <br/>
 
-<div class="d-flex align-items-center">
+<div class="">
   <label for="country" class="form-label me-2">Country</label>
-<input name="listing[country]" placeholder="Enter the country" type="text" class="form-control" style="width: 550px">
+<input name="listing[country]" placeholder="Enter the country" type="text" class="form-control" style="width: 550px" required>
+<div class="invalid-feedback">Enter valid country</div>
 </div>
 </div>
 <br/>
 
-<div class="d-flex align-items-center">
+<div class="">
   <label for="location" class="form-label me-2" style="width:120px">Location</label>
-<input name="listing[location]" placeholder="Enter the location" type="text" class="form-control"/>
+<input name="listing[location]" placeholder="Enter the location" type="text" class="form-control" required/>
+<div class="invalid-feedback">Enter valid location</div>
 </div>
 
 <br/>

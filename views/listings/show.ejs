@@ -5,13 +5,13 @@
     <h1 class="mt-5 mb-3">Listing Details</h1>
 
     <div>
-  <img src="<%=listing.image.url%>" class="show" alt="listing-image" style="width : 500px; height:300px">
+  <img src="<%=listing.image.url%>" class="img-fluid" alt="listing-image" style="width : 500px; height:300px">
   <div class="card-body">
     <p class="card-text">
                <ul>
         <b> <li><%=listing.title%></li></b>
          <li><%=listing.description%></li>
-         <li>&#8377;<%=listing.price.toLocaleString("en-IN")%></li>
+         <li>&#8377; <%= listing.price?.toLocaleString("en-IN") || "Not available" %>/ night</li>
          <li><%=listing.location%></li>
          <li><%=listing.country%></li>
     </ul>
