@@ -18,6 +18,12 @@ const listingSchema = new Schema({
     price : Number,
     location : String,
     country : String,
+    riview :[
+        {
+            type : Schema.Types.ObjectId,
+            ref : "Riview",
+        },
+    ],
 });
 
 // Creating model name Listing
