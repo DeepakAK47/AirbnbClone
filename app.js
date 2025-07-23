@@ -21,7 +21,7 @@ const expressLayouts = require("express-ejs-layouts");
 app.use(expressLayouts);
 app.set("layout", "layouts/boilerplate"); 
 
-
+const Review = require("./models/review.js");
 
 
 // It is the code for starting our server. 
@@ -65,7 +65,7 @@ app.get("/listings/new",wrapAsync(async(req,res,next)=>{
 
 app.get("/listings/:id",wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
-const listing = await Listing.findById(id);
+const listing = await Listing.findById(id).populate("reviews"); // here after using .populate  --> it will replace the ids to the full review documents.
 res.render("listings/show.ejs",{listing});
 }));
 
@@ -102,6 +102,25 @@ let deletedListing = await Listing.findByIdAndDelete(id);
 console.log(deletedListing);
 res.redirect("/listings");
 }));
+
+// Delete Route for the review
+app.delete("/listings/:id/reviews/:reviewId",async(req,res)=>{
+    const {id,reviewId} = req.params;
+    await Listing.findByIdAndUpdate(id,{$pull:{reviews :reviewId }});
+    await Review.findByIdAndDelete(reviewId);
+    res.redirect(`/listings/${id}`);
+});
+
+
+// Riview form Route
+app.post("/listings/:id/reviews", async(req,res)=>{
+let listing = await Listing.findById(req.params.id);
+let newReview = new Review(req.body.review);
+listing.reviews.push(newReview);
+await newReview.save();
+await listing.save();
+res.redirect(`/listings`);
+});
 
 // It is the route if the client sent the request to an invakid api
 // app.all("*",(req,res,next)=>{
