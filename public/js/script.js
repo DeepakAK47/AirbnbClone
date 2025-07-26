@@ -17,3 +17,15 @@
     }, false)
   })
 })()
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("flash-close-btn");
+  const alertBox = document.getElementById("flash-alert");
+
+  if (closeBtn && alertBox) {
+    closeBtn.addEventListener("click", () => {
+      alertBox.remove(); // Instantly removes the alert div from the DOM
+    });
+  }
+});

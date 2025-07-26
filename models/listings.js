@@ -25,6 +25,10 @@ const listingSchema = new Schema({
             ref : "Review",
         },
     ],
+    owner :{
+        type : Schema.Types.ObjectId,
+        ref : "User",
+    },
 });
 
 // It is used to delete the data of the review from the mongodb when we delete or particular listing.

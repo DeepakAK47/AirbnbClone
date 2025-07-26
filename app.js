@@ -23,6 +23,50 @@ app.set("layout", "layouts/boilerplate");
 
 const Review = require("./models/review.js");
 
+const session  = require("express-session");
+const flash = require("connect-flash");
+
+
+app.use(session({
+secret : "Deepak Singh",
+resave : false,
+saveUninitialized : true,
+cookie : {secure : false,
+    expires : Date.now() + 1000*60*60*24*3,
+    maxAge  :  1000*60*60*24*3,
+    httpOnly : true,
+}
+}));
+
+app.use(flash());
+app.use((req,res,next)=>{
+    res.locals.success = req.flash("success");
+    res.locals.error  = req.flash("error");
+    res.locals.currentUser = req.user;
+    next();
+});
+
+
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User =  require("./models/user.js");
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+//Passport Strategy
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+const {isLoggedIn} = require("./middleware.js");
+const {saveRedirectUrl} = require("./middleware.js")
+
+// Note --> It is the route fro creating the form signup.
+// const userRouter =  require("./routes/user.js");
+// app.use("/",userRouter);
+
 
 // It is the code for starting our server. 
 
@@ -57,30 +101,88 @@ res.render("listings/index.ejs",{allListings});
 }));
 
 // New Route
-app.get("/listings/new",wrapAsync(async(req,res,next)=>{
+app.get("/listings/new",isLoggedIn,wrapAsync(async(req,res,next)=>{
     res.render("listings/new.ejs"); 
 })); 
+
+// Signup Route
+app.get("/listings/signup",(req,res)=>{
+    res.render("user/signup");
+});
+
+// Post route for Signup
+
+app.post("/listings/signup",wrapAsync(async(req,res)=>{
+    console.log(req.body);
+    let{username,email,password}  = req.body;
+    const newUser =  new User({email,username});
+    const registeredUser = await User.register(newUser,password); 
+    console.log(registeredUser);
+    req.login(registeredUser,(err)=>{
+        if(err){
+            return next(err);
+        }
+            req.flash("success","Welcome to Wanderlust");
+    res.redirect("/listings");
+    });
+}));
+
+// Route for login
+app.get("/listings/login",(req,res)=>{
+res.render("user/login");
+});
+
+// POST Route for login
+app.post("/listings/login",
+    saveRedirectUrl,
+    passport.authenticate("local",{
+    failureRedirect : "/listings/login",
+    failureFlash : true,
+    successRedirect : "/listings",
+    successFlash :  " Welcome to Wanderlust"
+}),
+async(req,res) =>{
+    console.log("Login successfull, user",req.user);
+    req.flash("success","Welcome to Wanderlust");
+    let redirectUrl = res.locals.redirectUrl || "/listings";
+     res.redirect(redirectUrl);
+}
+);
+
+// Route for logout
+app.get("/listings/logout",(req,res,next)=>{
+    req.logout((err)=>{
+        if(err){
+            return next(err);
+        }
+        req.flash("success","Logout Successfuly!");
+        res.redirect("/listings/login");
+    });
+});
 
 // Show Route
 
 app.get("/listings/:id",wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
-const listing = await Listing.findById(id).populate("reviews"); // here after using .populate  --> it will replace the ids to the full review documents.
+const listing = await Listing.findById(id).populate("reviews").populate("owner");
+// here after using .populate  --> it will replace the ids to the full review documents.
 res.render("listings/show.ejs",{listing});
 }));
 
 // Create Route
 // Note -> Here next is a midddleware.
-app.post("/listings", wrapAsync(async(req,res,next)=>{
+app.post("/listings",isLoggedIn, wrapAsync(async(req,res,next)=>{
     console.log(req.body);
 const newListing = new Listing(req.body.listing);
+newListing.owner = req.user._id;git 
 await newListing.save();
+req.flash("success","New listing is added successfully");
 res.redirect("/listings");
 }));
 
 
 // Edit Route
-app.get("/listings/:id/edit", wrapAsync(async(req,res,next)=>{
+app.get("/listings/:id/edit",isLoggedIn, wrapAsync(async(req,res,next)=>{
 let {id} = req.params;
 const listing = await Listing.findById(id);
 res.render("listings/edit.ejs",{listing});
@@ -88,37 +190,41 @@ res.render("listings/edit.ejs",{listing});
 
 
 // update Route
-app.put("/listings/:id", wrapAsync(async(req,res,next)=>{
+app.put("/listings/:id",isLoggedIn, wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
     await Listing.findByIdAndUpdate(id,{...req.body.listing});
+    req.flash("success","Listing Edit Successfuly");
   res.redirect(`/listings/${id}`);
 }));
 
 // Delete Route
 
-app.delete("/listings/:id",wrapAsync(async(req,res,next)=>{
+app.delete("/listings/:id",isLoggedIn,wrapAsync(async(req,res,next)=>{
 let {id} = req.params;
 let deletedListing = await Listing.findByIdAndDelete(id);
 console.log(deletedListing);
+req.flash("success","Listing Deleted Successfuly");
 res.redirect("/listings");
 }));
 
 // Delete Route for the review
-app.delete("/listings/:id/reviews/:reviewId",async(req,res)=>{
+app.delete("/listings/:id/reviews/:reviewId",isLoggedIn,async(req,res)=>{
     const {id,reviewId} = req.params;
     await Listing.findByIdAndUpdate(id,{$pull:{reviews :reviewId }});
     await Review.findByIdAndDelete(reviewId);
+    req.flash("success","Review Deleted Successfuly");
     res.redirect(`/listings/${id}`);
 });
 
 
 // Riview form Route
-app.post("/listings/:id/reviews", async(req,res)=>{
+app.post("/listings/:id/reviews",isLoggedIn, async(req,res)=>{
 let listing = await Listing.findById(req.params.id);
 let newReview = new Review(req.body.review);
 listing.reviews.push(newReview);
 await newReview.save();
 await listing.save();
+req.flash("success","New Review Added successfuly");
 res.redirect(`/listings`);
 });
 
@@ -128,8 +234,16 @@ res.redirect(`/listings`);
 // });
 
 //   Route for the middleware --> This is responsible when you enter the wrong input in the any form like as string intead of the number.
+
+
+
+
 app.use((err,req,res,next)=>{
     let {status = 500,message="Something went wrong!"}  = err;
+    req.flash("error",message);
+    if(req.originalUrl === "/listings/signup"){
+        return res.redirect("/listings/signup");
+    }
     res.status(status).render("error.ejs",{err});
 });
 

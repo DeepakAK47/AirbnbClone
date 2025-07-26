@@ -18,7 +18,10 @@
     <!-- The below line is responsible for adding the navbar at the top of the website. -->
     <%- include("../includes/navbar.ejs")%>
     <!-- This is compulsory to inject the content. It is responsible for the showing all the content when you call the listing. -->
-    <div class="container"><%-body %></div> 
+    <div class="container">
+      <!-- The below line is responsible for showing the flash message when we add,delete,update our listings. -->
+      <%- include("../includes/flash.ejs") %> 
+      <%-body %></div> 
     <!-- This is the link for adding footer -->
       <%- include("../includes/footer.ejs")%>
     <script
