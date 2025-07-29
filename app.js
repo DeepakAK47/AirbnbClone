@@ -1,3 +1,8 @@
+if(process.env.NODE_ENV != "production"){
+require("dotenv").config();
+}
+
+
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -38,13 +43,13 @@ cookie : {secure : false,
 }
 }));
 
-app.use(flash());
-app.use((req,res,next)=>{
-    res.locals.success = req.flash("success");
-    res.locals.error  = req.flash("error");
-    res.locals.currentUser = req.user;
-    next();
-});
+// app.use(flash());
+// app.use((req,res,next)=>{
+//     res.locals.success = req.flash("success");
+//     res.locals.error  = req.flash("error");
+//     res.locals.currentUser = req.user;
+//     next();
+// });
 
 
 const passport = require("passport");
@@ -63,12 +68,27 @@ passport.deserializeUser(User.deserializeUser());
 const {isLoggedIn} = require("./middleware.js");
 const {saveRedirectUrl} = require("./middleware.js")
 
+
 // Note --> It is the route fro creating the form signup.
 // const userRouter =  require("./routes/user.js");
 // app.use("/",userRouter);
 
 
 // It is the code for starting our server. 
+const multer  = require("multer");
+
+const {storage} = require("./cloudConfig.js");
+const upload = multer({storage});
+
+
+
+app.use(flash());
+app.use((req,res,next)=>{
+    res.locals.success = req.flash("success");
+    res.locals.error  = req.flash("error");
+    res.locals.currentUser = req.user;
+    next();
+});
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/Deepak";
 
@@ -87,9 +107,9 @@ async function main(){
 
 
 // Setting our API's Route
-app.get("/", (req,res)=>{
-    res.send("Deepak is working on the Airbnb clone project");  // It is lsiteing at when call it at localhost:8080
-});
+// app.get("/", (req,res)=>{
+//     res.send("Deepak is working on the Airbnb clone project");  // It is lsiteing at when call it at localhost:8080
+// });
 
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
@@ -171,10 +191,17 @@ res.render("listings/show.ejs",{listing});
 
 // Create Route
 // Note -> Here next is a midddleware.
-app.post("/listings",isLoggedIn, wrapAsync(async(req,res,next)=>{
+
+app.post("/listings",isLoggedIn,upload.single("listing[image]"), wrapAsync(async(req,res,next)=>{
     console.log(req.body);
+    console.log(req.file);
 const newListing = new Listing(req.body.listing);
-newListing.owner = req.user._id;git 
+newListing.owner = req.user._id;
+
+newListing.image = {
+    url : req.file.path,
+    filename : req.file.filename
+};
 await newListing.save();
 req.flash("success","New listing is added successfully");
 res.redirect("/listings");
@@ -190,9 +217,17 @@ res.render("listings/edit.ejs",{listing});
 
 
 // update Route
-app.put("/listings/:id",isLoggedIn, wrapAsync(async(req,res,next)=>{
+app.put("/listings/:id",isLoggedIn,upload.single("listing[image]"), wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
-    await Listing.findByIdAndUpdate(id,{...req.body.listing});
+   let listing=  await Listing.findByIdAndUpdate(id,{...req.body.listing},{new : true});
+    // if the image is uploaded the update it 
+    if(req.file){
+        listing.image = {
+            url : req.file.path,
+            filename : req.file.filename
+        };
+        await listing.save();
+    }
     req.flash("success","Listing Edit Successfuly");
   res.redirect(`/listings/${id}`);
 }));

@@ -19,24 +19,39 @@
     </p>
   </div>
 </div>
-<% if(currentUser && currentUser._id.equals(listing.owner._id)){%>
 <div class="d-flex  gap-5">
     <a href="/listings/<%=listing._id%>/edit"><button class="btn btn-primary mb-5">Edit Listing</button></a>
     <br/><br/>
     <form method="POST" action="/listings/<%=listing._id%>?_method=DELETE">
 <button class="btn btn-danger">Delete Listing</button>
 </div>
-<%}%>
     </form>
+
     <div>
       <hr/>
       <form action="/listings/<%=listing._id%>/reviews" method="POST" class="needs-validation" novalidate>
         <h4>Leave a Review</h4>
-        <div>
-        <label for="review" class="form-label">Rating</label>
+        <!-- <div>
         <input type="number" name="review[rating]" class="form-control" min="1" max="5" style="width:200px" required>
         <div class="invalid-feedback">Enter Rating</div>
-        </div>
+        </div> -->
+
+          <div class="mb-3 mt-3">
+              <label for="review" class="form-label">Rating</label>
+<fieldset class="starability-slot">
+  <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
+  <input type="radio" id="second-rate1" name="review[rating]" value="1" />
+  <label for="second-rate1" title="Terrible">1 star</label>
+  <input type="radio" id="second-rate2" name="review[rating]" value="2" />
+  <label for="second-rate2" title="Not good">2 stars</label>
+  <input type="radio" id="second-rate3" name="review[rating]" value="3" />
+  <label for="second-rate3" title="Average">3 stars</label>
+  <input type="radio" id="second-rate4" name="review[rating]" value="4" />
+  <label for="second-rate4" title="Very good">4 stars</label>
+  <input type="radio" id="second-rate5" name="review[rating]" value="5" />
+  <label for="second-rate5" title="Amazing">5 stars</label>
+</fieldset>
+</div>
         <div>
           <label for="textArea" class="form-label">Comment</label>
           <textarea class="form-control" name="review[comment]" required></textarea>
@@ -51,8 +66,8 @@
         <% listing.reviews.forEach(function(review){%>
           <div class="card mb-2">
             <div class="card-body">
-              <strong>Rating : </strong> <%=review.rating%><br/>
               <strong>Commet : </strong> <%=review.comment%><br/>
+                <p class="starability-result card-text" data-rating="<%=review.rating%>">
               <form method="POST" action="/listings/<%=listing._id%>/reviews/<%=review._id%>?_method=DELETE" class="d-inline">
                 <button class="btn btn-danger btn-sm mt-2">Delete</button>
               </form>
@@ -64,7 +79,25 @@
           <p>No reviews yet.</p>
           <%}%>
     </div>
-</div>
+
+    <div class="col-8 offset-3 mb-3">
+      <h3>Where you'll be</h3>
+      <div id="map" style="height: 500px; width: 180%;"></div>
+<script>
+  const map = L.map('map').setView([28.6139, 77.2090], 13); // New Delhi coordinates
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  L.marker([28.6139, 77.2090]).addTo(map)
+    .bindPopup('New Delhi')
+    .openPopup();
+</script>
+
+      </div>
+    </div>
 </div>
 </div>
 </body>

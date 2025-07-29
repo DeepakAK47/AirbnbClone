@@ -15,7 +15,7 @@
 // I’ll give you the exact require statement for your case:
 
 // javascript
-// const helpers = require('./utils/helpers.js');
+// const helpers = require('./utils/helpers.js');   --> very important line.
 
 
 // text
@@ -30,3 +30,14 @@
 
 // javascript
 // const User = require('../models/user.js');
+
+
+// project/
+// │
+// ├── app.js
+// ├── utils.js
+// 🔹 In app.js, to require utils.js:
+// js
+// Copy
+// Edit
+// const utils = require('./utils');
