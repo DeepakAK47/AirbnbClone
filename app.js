@@ -120,6 +120,11 @@ const allListings = await Listing.find({});
 res.render("listings/index.ejs",{allListings});
 }));
 
+// Redirect common misspelling from /listenings to /listings
+app.get("/listenings", (req, res) => {
+    res.redirect("/listings");
+});
+
 // New Route
 app.get("/listings/new",isLoggedIn,wrapAsync(async(req,res,next)=>{
     res.render("listings/new.ejs"); 
@@ -192,19 +197,23 @@ res.render("listings/show.ejs",{listing});
 // Create Route
 // Note -> Here next is a midddleware.
 
-app.post("/listings",isLoggedIn,upload.single("listing[image]"), wrapAsync(async(req,res,next)=>{
+// Create Route - accept up to 5 images for a listing
+app.post("/listings", isLoggedIn, upload.array("listing[image]", 5), wrapAsync(async (req, res, next) => {
     console.log(req.body);
-    console.log(req.file);
-const newListing = new Listing(req.body.listing);
-newListing.owner = req.user._id;
+    console.log(req.files);
+    const newListing = new Listing(req.body.listing);
+    newListing.owner = req.user._id;
 
-newListing.image = {
-    url : req.file.path,
-    filename : req.file.filename
-};
-await newListing.save();
-req.flash("success","New listing is added successfully");
-res.redirect("/listings");
+    // If files were uploaded, map them into the images array
+    if (req.files && req.files.length) {
+        newListing.images = req.files.map(f => ({
+            url: f.path,
+            filename: f.filename
+        }));
+    }
+    await newListing.save();
+    req.flash("success", "New listing is added successfully");
+    res.redirect("/listings");
 }));
 
 
@@ -217,19 +226,19 @@ res.render("listings/edit.ejs",{listing});
 
 
 // update Route
-app.put("/listings/:id",isLoggedIn,upload.single("listing[image]"), wrapAsync(async(req,res,next)=>{
-    let {id} = req.params;
-   let listing=  await Listing.findByIdAndUpdate(id,{...req.body.listing},{new : true});
-    // if the image is uploaded the update it 
-    if(req.file){
-        listing.image = {
-            url : req.file.path,
-            filename : req.file.filename
-        };
+app.put("/listings/:id", isLoggedIn, upload.array("listing[image]", 5), wrapAsync(async (req, res, next) => {
+    let { id } = req.params;
+    let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing }, { new: true });
+    // if images are uploaded, replace the images array (or you could push to keep existing)
+    if (req.files && req.files.length) {
+        listing.images = req.files.map(f => ({
+            url: f.path,
+            filename: f.filename
+        }));
         await listing.save();
     }
-    req.flash("success","Listing Edit Successfuly");
-  res.redirect(`/listings/${id}`);
+    req.flash("success", "Listing Edit Successfuly");
+    res.redirect(`/listings/${id}`);
 }));
 
 // Delete Route

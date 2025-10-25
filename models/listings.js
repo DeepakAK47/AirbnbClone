@@ -12,10 +12,13 @@ const listingSchema = new Schema({
     description : {
         type : String,
     },
-    image:{
-        filename : String,
-        url : String,
-    },
+    // Support multiple images per listing
+    images: [
+        {
+            filename: String,
+            url: String,
+        }
+    ],
     price : Number,
     location : String,
     country : String,

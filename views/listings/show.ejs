@@ -5,7 +5,16 @@
     <h1 class="mt-5 mb-3"><%=listing.title%></h1>
 
     <div>
-  <img src="<%=listing.image.url%>" class="img-fluid" alt="listing-image" style="width : 500px; height:300px">
+  <% if (listing.images && listing.images.length) { %>
+    <% listing.images.forEach(function(img){ %>
+      <img src="<%= img.url %>" class="img-fluid mb-2" alt="listing-image" style="width : 500px; height:300px; object-fit:cover;">
+    <% }); %>
+  <% } else if (listing.image && listing.image.url) { %>
+    <!-- Backwards compatibility: single-image documents -->
+    <img src="<%=listing.image.url%>" class="img-fluid" alt="listing-image" style="width : 500px; height:300px">
+  <% } else { %>
+    <p>No image available</p>
+  <% } %>
   <div class="card-body">
     <p class="card-text">
                <ul>

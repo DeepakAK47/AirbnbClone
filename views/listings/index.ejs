@@ -3,7 +3,7 @@
     <%for(let listing of allListings){ %>
         <a href="/listings/<%=listing._id%>" class="text-decoration-none text-dark">
     <div >
-  <img src="<%=listing.image.url%>" style="height : 250px; width : 100%; object-fit : cover; " class="listing-img img-fluid-rounded rounded" alt="listing image">
+  <img src="<%= (listing.images && listing.images.length) ? listing.images[0].url : (listing.image && listing.image.url) %>" style="height : 250px; width : 100%; object-fit : cover; " class="listing-img img-fluid-rounded rounded" alt="listing image">
     <p class="mt-2 mb-0">
         <b><%=listing.title%></b><br/>
        &#8377; <%= listing.price?.toLocaleString("en-IN") || "Not available" %>/ night
