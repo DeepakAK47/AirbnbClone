@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const Review =  require("./review.js");
 
-// Creating Schema
+// Creating Schema for listing
 
 const listingSchema = new Schema({
     title:{
@@ -34,7 +34,7 @@ const listingSchema = new Schema({
         type : Schema.Types.ObjectId,
         ref : "User",
     },
-});
+});                 
 
 // It is used to delete the data of the review from the mongodb when we delete or particular listing.
 listingSchema.post("findOneAndDelete",async function(deletedListing){

@@ -33,3 +33,4 @@ const initDB = async () =>{
     console.log("Your data is saved successfully inside the mongo shell");
 }
 initDB();
+   

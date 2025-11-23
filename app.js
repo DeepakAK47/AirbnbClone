@@ -2,28 +2,38 @@ if(process.env.NODE_ENV != "production"){
 require("dotenv").config();
 }
 
-
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const Listing = require("./models/listings.js");  // Be carefull use single dot if it is outside only one directory.
+const MONGO_URL = "mongodb://127.0.0.1:27017/Deepak";
+const Listing = require("./models/listings.js");
 const path = require("path");
-// Aquiring the wrapAsync function
-const wrapAsync = require("./utils/wrapAsync.js");
-// Aquiring AppError file
+const methodOverride = require("method-override");
+const ejsMate = require('ejs-mate');
+const expressLayouts = require("express-ejs-layouts");
 
+
+app.use(methodOverride("_method"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
-
-const methodOverride = require("method-override");
-app.use(methodOverride("_method"));
-
-const ejsMate = require('ejs-mate');
 app.engine('ejs', ejsMate);
-
-const expressLayouts = require("express-ejs-layouts");
 app.use(expressLayouts);
+
+
+main()
+.then(()=>{
+    console.log("Mongodb server is connected successfuly");
+})
+    .catch((err)=>{
+        console.log(err);
+})
+
+async function main(){
+    await mongoose.connect(MONGO_URL);
+}
+// Aquiring the wrapAsync function
+const wrapAsync = require("./utils/wrapAsync.js");
+
 app.set("layout", "layouts/boilerplate"); 
 
 const Review = require("./models/review.js");
@@ -69,7 +79,7 @@ const {isLoggedIn} = require("./middleware.js");
 const {saveRedirectUrl} = require("./middleware.js")
 
 
-// Note --> It is the route fro creating the form signup.
+// Note --> It is the route for creating the form signup.
 // const userRouter =  require("./routes/user.js");
 // app.use("/",userRouter);
 
@@ -90,19 +100,7 @@ app.use((req,res,next)=>{
     next();
 });
 
-const MONGO_URL = "mongodb://127.0.0.1:27017/Deepak";
 
-main()
-.then(()=>{
-    console.log("Mongodb server is connected successfuly");
-})
-    .catch((err)=>{
-        console.log(err);
-})
-
-async function main(){
-    await mongoose.connect(MONGO_URL);
-}
 
 
 
@@ -114,7 +112,7 @@ async function main(){
 app.set("view engine","ejs");
 app.set("views",path.join(__dirname,"views"));
 
-// Index Route  --> It is responsibe for the front page of the UI
+// 1. Index Route  --> It is responsibe for the front page of the UI
 app.get("/listings", wrapAsync(async(req,res,next)=>{
 const allListings = await Listing.find({});
 res.render("listings/index.ejs",{allListings});
@@ -125,7 +123,7 @@ app.get("/listenings", (req, res) => {
     res.redirect("/listings");
 });
 
-// New Route
+//3. New Route
 app.get("/listings/new",isLoggedIn,wrapAsync(async(req,res,next)=>{
     res.render("listings/new.ejs"); 
 })); 
@@ -185,7 +183,7 @@ app.get("/listings/logout",(req,res,next)=>{
     });
 });
 
-// Show Route
+//2. Show Route
 
 app.get("/listings/:id",wrapAsync(async(req,res,next)=>{
     let {id} = req.params;
@@ -194,10 +192,17 @@ const listing = await Listing.findById(id).populate("reviews").populate("owner")
 res.render("listings/show.ejs",{listing});
 }));
 
+// Debug route: return first 50 listings (title, images, image) as JSON for inspection
+app.get('/debug/listings', wrapAsync(async (req, res) => {
+    const docs = await Listing.find({}).limit(50).select('title images image');
+    // send plain JSON so you can inspect which fields exist and their values
+    res.json(docs);
+}));
+
 // Create Route
 // Note -> Here next is a midddleware.
 
-// Create Route - accept up to 5 images for a listing
+// 5.  Create Route - accept up to 5 images for a listing
 app.post("/listings", isLoggedIn, upload.array("listing[image]", 5), wrapAsync(async (req, res, next) => {
     console.log(req.body);
     console.log(req.files);
@@ -225,7 +230,7 @@ res.render("listings/edit.ejs",{listing});
 }));
 
 
-// update Route
+//5. update Route
 app.put("/listings/:id", isLoggedIn, upload.array("listing[image]", 5), wrapAsync(async (req, res, next) => {
     let { id } = req.params;
     let listing = await Listing.findByIdAndUpdate(id, { ...req.body.listing }, { new: true });
@@ -241,7 +246,7 @@ app.put("/listings/:id", isLoggedIn, upload.array("listing[image]", 5), wrapAsyn
     res.redirect(`/listings/${id}`);
 }));
 
-// Delete Route
+// 6. Delete Route
 
 app.delete("/listings/:id",isLoggedIn,wrapAsync(async(req,res,next)=>{
 let {id} = req.params;

@@ -15,10 +15,10 @@
   <% } else { %>
     <p>No image available</p>
   <% } %>
-  <div class="card-body">
+  <div class="card-body"> 
     <p class="card-text">
                <ul>
-                <li>Owned by : <b><%=listing.owner.username%></b></li>
+                <li>Owned by : <b><%= listing.owner && listing.owner.username ? listing.owner.username : 'Unknown' %></b></li>
          <li><%=listing.description%></li>
          <li>&#8377; <%= listing.price?.toLocaleString("en-IN") || "Not available" %>/ night</li>
          <li><%=listing.location%></li>
@@ -111,3 +111,4 @@
 </div>
 </body>
 
+    
