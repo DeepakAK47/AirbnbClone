@@ -3,16 +3,44 @@
 }
 
 .navbar{
-    height : 5rem;
-    background-color : white;
+    /* Reduce vertical spacing so icons/links sit higher */
+    min-height: 5rem; /* slightly shorter */
+    padding-top: 0.45rem; /* reduce gap above */
+    padding-bottom: 0.45rem; /* reduce gap below */
+    background-color: white;
+}
+
+/* Remove extra margin that may be added by markup classes like `mt-5` on the collapse */
+.navbar .collapse.navbar-collapse {
+    margin-top: 0 !important;
 }
 .fa-solid {
-    color : #fe424d;
-    font-size : 35px;
+    color: #fe424d;
+    font-size: 36px; /* brand icon size (slightly reduced) */
+    line-height: 1;
+    margin-top: 0;
 }
 
 .nav-link {
-    color : #222222 !important;
+    color: #222222 !important;
+    font-size: 1.02rem; /* link text size */
+    font-weight: 600;
+    padding-top: 0.25rem; /* reduce vertical padding */
+    padding-bottom: 0.25rem;
+    margin-left: 0.35rem; /* reduce excessive ms-* spacing from markup */
+    margin-right: 0.35rem;
+}
+
+/* Reduce icon-left spacing and better align icon with text */
+.nav-link i {
+    margin-right: 0.5rem;
+    font-size: 1.25rem;
+    vertical-align: -3px;
+}
+
+/* Ensure the toggler stays visually centered when navbar is taller */
+.navbar-toggler {
+    padding: 0.35rem 0.6rem;
 }
 .footer{
     text-align : center;
@@ -53,3 +81,32 @@ font-size : 1.5rem;
     height: 400px;
     width: 100%;
   }
+
+/* Search bar styles placed under the navbar */
+.nav-search-bar {
+    background: #ffffff;
+    border-radius: 40px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    padding: 12px 16px;
+    align-items: center;
+}
+.nav-search-bar .search-field {
+    flex: 1 1 0;
+}
+.nav-search-bar .search-field input.form-control {
+    background: transparent;
+    outline: none;
+    box-shadow: none;
+}
+.nav-search-bar .border-start {
+    border-left: 1px solid rgba(0,0,0,0.06);
+}
+.nav-search-bar .btn {
+    width: 48px;
+    height: 48px;
+}
+
+@media (max-width: 767px) {
+    .nav-search-bar { width: 95% !important; padding: 10px; }
+    .nav-search-bar .search-field { padding-left: 8px; padding-right: 8px; }
+}
