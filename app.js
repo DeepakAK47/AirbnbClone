@@ -20,17 +20,24 @@ app.engine('ejs', ejsMate);
 app.use(expressLayouts);
 
 
-main()
-.then(()=>{
-    console.log("Mongodb server is connected successfuly");
-})
-    .catch((err)=>{
-        console.log(err);
-})
-
-async function main(){
-    await mongoose.connect(MONGO_URL);
+// Start the server only after connecting to MongoDB. If the connection fails,
+// exit the process so the platform (Render) can retry the deploy.
+async function startServer() {
+    try {
+        await mongoose.connect(MONGO_URL);
+        console.log("Mongodb server is connected successfully");
+        const PORT = process.env.PORT || 8080;
+        app.listen(PORT, () => {
+            console.log(`App is listening on port ${PORT}`);
+        });
+    } catch (err) {
+        console.error("Failed to connect to MongoDB:", err);
+        // Exit with non-zero so the host marks the deploy as failed and can retry
+        process.exit(1);
+    }
 }
+
+startServer();
 // Aquiring the wrapAsync function
 const wrapAsync = require("./utils/wrapAsync.js");
 
