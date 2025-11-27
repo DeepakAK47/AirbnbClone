@@ -1,1 +1,13 @@
 .env
+node_modules/
+notePad.cpp
+
+# Optional / recommended ignores
+/.vscode/
+.DS_Store
+npm-debug.log*
+# Logs
+*.log
+
+# Build / distribution
+/dist/
