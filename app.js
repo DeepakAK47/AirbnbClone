@@ -315,7 +315,4 @@ app.use((err,req,res,next)=>{
 });
 
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`App is listening on port ${PORT}`);
-});
+// Server is started from `startServer()` after a successful MongoDB connection.
