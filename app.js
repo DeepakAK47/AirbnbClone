@@ -5,7 +5,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const MONGO_URL = "mongodb://127.0.0.1:27017/Deepak";
+const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Deepak";
 const Listing = require("./models/listings.js");
 const path = require("path");
 const methodOverride = require("method-override");
@@ -40,18 +40,29 @@ const Review = require("./models/review.js");
 
 const session  = require("express-session");
 const flash = require("connect-flash");
+const MongoStore = require('connect-mongo');
 
 
-app.use(session({
-secret : "Deepak Singh",
-resave : false,
-saveUninitialized : true,
-cookie : {secure : false,
-    expires : Date.now() + 1000*60*60*24*3,
-    maxAge  :  1000*60*60*24*3,
-    httpOnly : true,
-}
-}));
+const store = MongoStore.create({
+    mongoUrl: MONGO_URL,
+    touchAfter: 24 * 3600 // time period in seconds
+});
+
+const sessionConfig = {
+    store,
+    name: 'session',
+    secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+};
+
+app.use(session(sessionConfig));
 
 // app.use(flash());
 // app.use((req,res,next)=>{
@@ -297,6 +308,7 @@ app.use((err,req,res,next)=>{
 });
 
 
-app.listen(8080,()=>{
-    console.log("App is listening on the port of 8080");  // It is used for starting the server.
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+    console.log(`App is listening on port ${PORT}`);
 });
