@@ -5,7 +5,7 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const MONGO_URL = process.env.MONGO_URL || "mongodb://127.0.0.1:27017/Deepak";
+const dburl = process.env.ATLASDB_URL;
 const Listing = require("./models/listings.js");
 const path = require("path");
 const methodOverride = require("method-override");
@@ -24,7 +24,7 @@ app.use(expressLayouts);
 // exit the process so the platform (Render) can retry the deploy.
 async function startServer() {
     try {
-        await mongoose.connect(MONGO_URL);
+        await mongoose.connect(dburl);
         console.log("Mongodb server is connected successfully");
         const PORT = process.env.PORT || 8080;
         app.listen(PORT, () => {
@@ -46,19 +46,27 @@ app.set("layout", "layouts/boilerplate");
 const Review = require("./models/review.js");
 
 const session  = require("express-session");
+const Mongostore = require('connect-mongo');
 const flash = require("connect-flash");
 const MongoStore = require('connect-mongo');
 
 
 const store = MongoStore.create({
-    mongoUrl: MONGO_URL,
-    touchAfter: 24 * 3600 // time period in seconds
+    mongoUrl : dburl,
+    crypto : {
+        secret :  process.env.SECRET
+    },
+    touchAfter : 24*36000, 
+});
+
+store.on("error",()=>{
+    console.log("ERROR IN MONGODB SESSION",err);
 });
 
 const sessionConfig = {
     store,
     name: 'session',
-    secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret',
+    secret: process.env.SESSION_SECRET ||  process.env.SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -70,6 +78,8 @@ const sessionConfig = {
 };
 
 app.use(session(sessionConfig));
+
+
 
 // app.use(flash());
 // app.use((req,res,next)=>{
@@ -316,3 +326,4 @@ app.use((err,req,res,next)=>{
 
 
 // Server is started from `startServer()` after a successful MongoDB connection.
+
