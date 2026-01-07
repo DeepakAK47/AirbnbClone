@@ -49,9 +49,10 @@ async function startServer() {
         await mongoose.connect(dburl);
         console.log("Mongodb server is connected successfully");
         
-        // Create MongoStore using existing mongoose connection
+        // Create MongoStore with the MongoDB URL
+        // MongoStore will manage its own connection
         const store = MongoStore.create({
-            client: mongoose.connection.getClient(),
+            mongoUrl: dburl,
             crypto : {
                 secret :  process.env.SECRET
             },
@@ -60,7 +61,11 @@ async function startServer() {
         });
 
         store.on("error",(err)=>{
-            console.log("ERROR IN MONGODB SESSION",err);
+            console.error("ERROR IN MONGODB SESSION:", err);
+        });
+
+        store.on("connected", () => {
+            console.log("MongoStore connected successfully");
         });
 
         const sessionConfig = {
