@@ -51,36 +51,27 @@ async function startServer() {
         
         // Create MongoStore with the MongoDB URL
         // MongoStore will manage its own connection
-        const store = MongoStore.create({
-            mongoUrl: dburl,
-            crypto : {
-                secret :  process.env.SECRET
-            },
-            touchAfter : 24*3600,
-            collectionName: 'sessions'
-        });
+const store = MongoStore.create({
+    mongoUrl: dburl,
+    touchAfter: 24 * 3600,
+    collectionName: 'sessions'
+});
 
-        store.on("error",(err)=>{
-            console.error("ERROR IN MONGODB SESSION:", err);
-        });
 
-        store.on("connected", () => {
-            console.log("MongoStore connected successfully");
-        });
+const sessionConfig = {
+    store,
+    name: 'session',
+    secret: process.env.SESSION_SECRET, // ✅ ONLY THIS
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+};
 
-        const sessionConfig = {
-            store,
-            name: 'session',
-            secret: process.env.SESSION_SECRET ||  process.env.SECRET,
-            resave: false,
-            saveUninitialized: false,
-            cookie: {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-                maxAge: 1000 * 60 * 60 * 24 * 7
-            }
-        };
 
         app.use(session(sessionConfig));
         
