@@ -78,6 +78,15 @@ async function startServer() {
         passport.serializeUser(User.serializeUser());
         passport.deserializeUser(User.deserializeUser());
         
+        // Initialize flash AFTER session and passport
+        app.use(flash());
+        app.use((req,res,next)=>{
+            res.locals.success = req.flash("success");
+            res.locals.error  = req.flash("error");
+            res.locals.currentUser = req.user;
+            next();
+        });
+        
         const PORT = process.env.PORT || 8080;
         app.listen(PORT, () => {
             console.log(`App is listening on port ${PORT}`);
@@ -105,20 +114,6 @@ const multer  = require("multer");
 
 const {storage} = require("./cloudConfig.js");
 const upload = multer({storage});
-
-
-
-app.use(flash());
-app.use((req,res,next)=>{
-    res.locals.success = req.flash("success");
-    res.locals.error  = req.flash("error");
-    res.locals.currentUser = req.user;
-    next();
-});
-
-
-
-
 
 // Setting our API's Route
 // app.get("/", (req,res)=>{
