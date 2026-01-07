@@ -19,6 +19,19 @@ app.use(express.static('public'));
 app.engine('ejs', ejsMate);
 app.use(expressLayouts);
 
+// Aquiring the wrapAsync function
+const wrapAsync = require("./utils/wrapAsync.js");
+
+app.set("layout", "layouts/boilerplate"); 
+
+const Review = require("./models/review.js");
+
+const session  = require("express-session");
+const flash = require("connect-flash");
+const MongoStore = require('connect-mongo');
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const User =  require("./models/user.js");
 
 // Start the server only after connecting to MongoDB. If the connection fails,
 // exit the process so the platform (Render) can retry the deploy.
@@ -26,6 +39,45 @@ async function startServer() {
     try {
         await mongoose.connect(dburl);
         console.log("Mongodb server is connected successfully");
+        
+        // Create MongoStore AFTER MongoDB connection is established
+        const store = MongoStore.create({
+            mongoUrl : dburl,
+            crypto : {
+                secret :  process.env.SECRET
+            },
+            touchAfter : 24*3600, 
+        });
+
+        store.on("error",(err)=>{
+            console.log("ERROR IN MONGODB SESSION",err);
+        });
+
+        const sessionConfig = {
+            store,
+            name: 'session',
+            secret: process.env.SESSION_SECRET ||  process.env.SECRET,
+            resave: false,
+            saveUninitialized: false,
+            cookie: {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+                maxAge: 1000 * 60 * 60 * 24 * 7
+            }
+        };
+
+        app.use(session(sessionConfig));
+        
+        // Initialize passport AFTER session
+        app.use(passport.initialize());
+        app.use(passport.session());
+        
+        //Passport Strategy
+        passport.use(new LocalStrategy(User.authenticate()));
+        passport.serializeUser(User.serializeUser());
+        passport.deserializeUser(User.deserializeUser());
+        
         const PORT = process.env.PORT || 8080;
         app.listen(PORT, () => {
             console.log(`App is listening on port ${PORT}`);
@@ -38,70 +90,6 @@ async function startServer() {
 }
 
 startServer();
-// Aquiring the wrapAsync function
-const wrapAsync = require("./utils/wrapAsync.js");
-
-app.set("layout", "layouts/boilerplate"); 
-
-const Review = require("./models/review.js");
-
-const session  = require("express-session");
-const Mongostore = require('connect-mongo');
-const flash = require("connect-flash");
-const MongoStore = require('connect-mongo');
-
-
-const store = MongoStore.create({
-    mongoUrl : dburl,
-    crypto : {
-        secret :  process.env.SECRET
-    },
-    touchAfter : 24*36000, 
-});
-
-store.on("error",()=>{
-    console.log("ERROR IN MONGODB SESSION",err);
-});
-
-const sessionConfig = {
-    store,
-    name: 'session',
-    secret: process.env.SESSION_SECRET ||  process.env.SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    }
-};
-
-app.use(session(sessionConfig));
-
-
-
-// app.use(flash());
-// app.use((req,res,next)=>{
-//     res.locals.success = req.flash("success");
-//     res.locals.error  = req.flash("error");
-//     res.locals.currentUser = req.user;
-//     next();
-// });
-
-
-const passport = require("passport");
-const LocalStrategy = require("passport-local");
-const User =  require("./models/user.js");
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-//Passport Strategy
-passport.use(new LocalStrategy(User.authenticate()));
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
-
 
 const {isLoggedIn} = require("./middleware.js");
 const {saveRedirectUrl} = require("./middleware.js")
