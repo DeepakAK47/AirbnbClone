@@ -109,6 +109,11 @@ const sessionConfig = {
 
 function setupRoutes() {
     // 1. Index Route  --> It is responsibe for the front page of the UI
+
+      app.get("/", (req, res) => {
+        res.redirect("/listings");
+    });
+    
     app.get("/listings", wrapAsync(async(req,res,next)=>{
         const allListings = await Listing.find({});
         res.render("listings/index.ejs",{allListings});
