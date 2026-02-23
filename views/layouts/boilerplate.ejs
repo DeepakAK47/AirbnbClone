@@ -33,19 +33,20 @@
 </head>
 <body>
     <!-- The below line is responsible for adding the navbar at the top of the website. -->
-    <%- include("../includes/navbar.ejs")%>
+    <%- include("../includes/navbar")%>
     <!-- This is compulsory to inject the content. It is responsible for the showing all the content when you call the listing. -->
     <div class="container">
       <!-- The below line is responsible for showing the flash message when we add,delete,update our listings. -->
-      <%- include("../includes/flash.ejs") %> 
+      <%- include("../includes/flash") %> 
       <%-body %></div> 
     <!-- This is the link for adding footer -->
-      <%- include("../includes/footer.ejs")%>
+      <%- include("../includes/footer")%>
     <script
   src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
   integrity="sha384-ENjdO4Dr2bkBIFxQpeoA6DQDkUWiN0nUomKc8sJz7SoNHDoD8HkSxNf4x86dIHNDz0"
   crossorigin="anonymous"
 ></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
  <script src="/js/script.js"></script>
 </body>
 </html>

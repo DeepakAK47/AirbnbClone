@@ -1,5 +1,5 @@
-if(process.env.NODE_ENV != "production"){
-require("dotenv").config();
+if (process.env.NODE_ENV != "production") {
+    require("dotenv").config();
 }
 
 const express = require("express");
@@ -22,25 +22,25 @@ app.use(expressLayouts);
 // Aquiring the wrapAsync function
 const wrapAsync = require("./utils/wrapAsync.js");
 
-app.set("layout", "layouts/boilerplate"); 
-app.set("view engine","ejs");
-app.set("views",path.join(__dirname,"views"));
+app.set("layout", "layouts/boilerplate");
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
 const Review = require("./models/review.js");
 
-const session  = require("express-session");
+const session = require("express-session");
 const flash = require("connect-flash");
 const MongoStore = require('connect-mongo');
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
-const User =  require("./models/user.js");
+const User = require("./models/user.js");
 
-const {isLoggedIn} = require("./middleware.js");
-const {saveRedirectUrl} = require("./middleware.js");
+const { isLoggedIn } = require("./middleware.js");
+const { saveRedirectUrl } = require("./middleware.js");
 
-const multer  = require("multer");
-const {storage} = require("./cloudConfig.js");
-const upload = multer({storage});
+const multer = require("multer");
+const { storage } = require("./cloudConfig.js");
+const upload = multer({ storage });
 
 // Start the server only after connecting to MongoDB. If the connection fails,
 // exit the process so the platform (Render) can retry the deploy.
@@ -48,57 +48,57 @@ async function startServer() {
     try {
         await mongoose.connect(dburl);
         console.log("Mongodb server is connected successfully");
-        
+
         // Create MongoStore with the MongoDB URL
         // MongoStore will manage its own connection
-const store = MongoStore.create({
-    mongoUrl: dburl,
-    touchAfter: 24 * 3600,
-    collectionName: 'sessions'
-});
+        const store = MongoStore.create({
+            mongoUrl: dburl,
+            touchAfter: 24 * 3600,
+            collectionName: 'sessions'
+        });
 
 
-const sessionConfig = {
-    store,
-    name: 'session',
-    secret: process.env.SESSION_SECRET, // ✅ ONLY THIS
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    }
-};
+        const sessionConfig = {
+            store,
+            name: 'session',
+            secret: process.env.SESSION_SECRET, // ✅ ONLY THIS
+            resave: false,
+            saveUninitialized: false,
+            cookie: {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+                maxAge: 1000 * 60 * 60 * 24 * 7
+            }
+        };
 
 
         app.use(session(sessionConfig));
-        
+        app.use(flash());
+
         // Initialize passport AFTER session
         app.use(passport.initialize());
         app.use(passport.session());
-        
+
         //Passport Strategy
         passport.use(new LocalStrategy(User.authenticate()));
         passport.serializeUser(User.serializeUser());
         passport.deserializeUser(User.deserializeUser());
-        
+
         // Initialize flash AFTER session and passport
-        app.use(flash());
-        app.use((req,res,next)=>{
-            res.locals.success = req.flash("success");
-            res.locals.error  = req.flash("error");
-            res.locals.currentUser = req.user;
+        app.use((req, res, next) => {
+            res.locals.success = req.flash("success") || [];
+            res.locals.error = req.flash("error") || [];
+            res.locals.currentUser = req.user || null;
             next();
         });
-        
+
         // Define routes AFTER all middleware is set up
         setupRoutes();
-        
+
         const PORT = process.env.PORT || 8080;
         app.listen(PORT, () => {
-            console.log(`App is listening on port ${PORT}`);
+            console.log(`App is listening on port http://localhost:${PORT}`);
         });
     } catch (err) {
         console.error("Failed to connect to MongoDB:", err);
@@ -110,13 +110,14 @@ const sessionConfig = {
 function setupRoutes() {
     // 1. Index Route  --> It is responsibe for the front page of the UI
 
-      app.get("/", (req, res) => {
+    app.get("/", async (req, res) => {
+        const user = await User.find({});
         res.redirect("/listings");
     });
-    
-    app.get("/listings", wrapAsync(async(req,res,next)=>{
+
+    app.get("/listings", wrapAsync(async (req, res, next) => {
         const allListings = await Listing.find({});
-        res.render("listings/index.ejs",{allListings});
+        res.render("listings/index.ejs", { allListings });
     }));
 
     // Redirect common misspelling from /listenings to /listings
@@ -125,67 +126,90 @@ function setupRoutes() {
     });
 
     //3. New Route
-    app.get("/listings/new",isLoggedIn,wrapAsync(async(req,res,next)=>{
-        res.render("listings/new.ejs"); 
-    })); 
+    app.get("/listings/new", isLoggedIn, wrapAsync(async (req, res, next) => {
+        res.render("listings/new.ejs");
+    }));
 
     // Signup Route
-    app.get("/listings/signup",(req,res)=>{
+    app.get("/listings/signup", (req, res) => {
         res.render("user/signup");
     });
 
     // Post route for Signup
-    app.post("/listings/signup",wrapAsync(async(req,res,next)=>{
+    app.post("/listings/signup", wrapAsync(async (req, res, next) => {
         console.log(req.body);
-        let{username,email,password}  = req.body;
-        const newUser =  new User({email,username});
-        const registeredUser = await User.register(newUser,password); 
+        let { username, email, password } = req.body;
+        const newUser = new User({ email, username });
+        const registeredUser = await User.register(newUser, password);
         console.log(registeredUser);
-        req.login(registeredUser,(err)=>{
-            if(err){
+        req.login(registeredUser, (err) => {
+            if (err) {
                 return next(err);
             }
-            req.flash("success","Welcome to Wanderlust");
+            req.flash("success", "Welcome to Wanderlust");
             res.redirect("/listings");
         });
     }));
 
     // Route for login
-    app.get("/listings/login",(req,res)=>{
+    app.get("/listings/login", (req, res) => {
         res.render("user/login");
     });
 
     // POST Route for login
-    app.post("/listings/login",
-        saveRedirectUrl,
-        passport.authenticate("local",{
-            failureRedirect : "/listings/login",
-            failureFlash : true,
-        }),
-        async(req,res) =>{
-            console.log("Login successfull, user",req.user);
-            req.flash("success","Welcome to Wanderlust");
-            let redirectUrl = res.locals.redirectUrl || "/listings";
-            res.redirect(redirectUrl);
+    app.post("/listings/login", saveRedirectUrl, async (req, res, next) => {
+        const { username } = req.body;
+        try {
+            const userExists = await User.findOne({ username: username });
+
+            if (!userExists) {
+                req.flash("error", "User not found. Please create an account first!");
+                // Manually save the session before redirecting
+                return req.session.save(() => {
+                    res.redirect("/listings/signup");
+                });
+            }
+
+            passport.authenticate("local", (err, user, info) => {
+                if (err) return next(err);
+                if (!user) {
+                    req.flash("error", "Incorrect password. Please try again.");
+                    return req.session.save(() => {
+                        res.redirect("/listings/login");
+                    });
+                }
+
+                req.login(user, (err) => {
+                    if (err) return next(err);
+                    req.flash("success", "Welcome back to Wanderlust!");
+                    let redirectUrl = res.locals.redirectUrl || "/listings";
+                    req.session.save(() => {
+                        res.redirect(redirectUrl);
+                    });
+                });
+            })(req, res, next);
+        } catch (e) {
+            req.flash("error", e.message);
+            req.session.save(() => res.redirect("/listings/login"));
         }
-    );
+    });
 
     // Route for logout
-    app.get("/listings/logout",(req,res,next)=>{
-        req.logout((err)=>{
-            if(err){
+    app.get("/listings/logout", (req, res, next) => {
+        req.logout((err) => {
+            if (err) {
                 return next(err);
             }
-            req.flash("success","Logout Successfuly!");
+            req.flash("success", "Logout Successfuly!");
             res.redirect("/listings/login");
         });
     });
 
     //2. Show Route
-    app.get("/listings/:id",wrapAsync(async(req,res,next)=>{
-        let {id} = req.params;
+    app.get("/listings/:id", wrapAsync(async (req, res, next) => {
+        let { id } = req.params;
         const listing = await Listing.findById(id).populate("reviews").populate("owner");
-        res.render("listings/show.ejs",{listing});
+        res.render("listings/show.ejs", { listing });
     }));
 
     // Debug route
@@ -213,10 +237,10 @@ function setupRoutes() {
     }));
 
     // Edit Route
-    app.get("/listings/:id/edit",isLoggedIn, wrapAsync(async(req,res,next)=>{
-        let {id} = req.params;
+    app.get("/listings/:id/edit", isLoggedIn, wrapAsync(async (req, res, next) => {
+        let { id } = req.params;
         const listing = await Listing.findById(id);
-        res.render("listings/edit.ejs",{listing});
+        res.render("listings/edit.ejs", { listing });
     }));
 
     // Update Route
@@ -235,44 +259,46 @@ function setupRoutes() {
     }));
 
     // Delete Route
-    app.delete("/listings/:id",isLoggedIn,wrapAsync(async(req,res,next)=>{
-        let {id} = req.params;
+    app.delete("/listings/:id", isLoggedIn, wrapAsync(async (req, res, next) => {
+        let { id } = req.params;
         let deletedListing = await Listing.findByIdAndDelete(id);
         console.log(deletedListing);
-        req.flash("success","Listing Deleted Successfuly");
+        req.flash("success", "Listing Deleted Successfuly");
         res.redirect("/listings");
     }));
 
     // Delete Route for the review
-    app.delete("/listings/:id/reviews/:reviewId",isLoggedIn,wrapAsync(async(req,res)=>{
-        const {id,reviewId} = req.params;
-        await Listing.findByIdAndUpdate(id,{$pull:{reviews :reviewId }});
+    app.delete("/listings/:id/reviews/:reviewId", isLoggedIn, wrapAsync(async (req, res) => {
+        const { id, reviewId } = req.params;
+        await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
         await Review.findByIdAndDelete(reviewId);
-        req.flash("success","Review Deleted Successfuly");
+        req.flash("success", "Review Deleted Successfuly");
         res.redirect(`/listings/${id}`);
     }));
 
     // Review form Route
-    app.post("/listings/:id/reviews",isLoggedIn, wrapAsync(async(req,res)=>{
-        let {id} = req.params;
+    app.post("/listings/:id/reviews", isLoggedIn, wrapAsync(async (req, res) => {
+        let { id } = req.params;
         let listing = await Listing.findById(id);
         let newReview = new Review(req.body.review);
         listing.reviews.push(newReview);
         await newReview.save();
         await listing.save();
-        req.flash("success","New Review Added successfuly");
+        req.flash("success", "New Review Added successfuly");
         res.redirect(`/listings/${id}`);
     }));
 
     // Error handling middleware
-    app.use((err,req,res,next)=>{
-        let {status = 500,message="Something went wrong!"}  = err;
-        req.flash("error",message);
-        if(req.originalUrl === "/listings/signup"){
-            return res.redirect("/listings/signup");
-        }
-        res.status(status).render("error.ejs",{err});
-    });
+    app.use((err, req, res, next) => {
+    let { status = 500, message = "Something went wrong!" } = err;
+    if (req.originalUrl === "/listings/signup") {
+        req.flash("error", message);
+        return req.session.save(() => {
+            res.redirect("/listings/signup");
+        });
+    }
+    res.status(status).render("error.ejs", { err });
+});
 }
 
 startServer();
